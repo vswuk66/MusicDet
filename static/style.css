@@ -1,0 +1,53 @@
+/* Добавляем стили для левого меню и обёртки контента */
+.container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 200px;
+    background-color: #f0f0f0;
+    padding: 10px;
+    border-right: 1px solid #ccc;
+}
+
+.search {
+    margin-bottom: 10px;
+}
+
+.search input {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.menu li {
+    margin: 5px 0;
+}
+
+.menu-item {
+    display: block;
+    padding: 5px 10px;
+    text-decoration: none;
+    color: #333;
+    border-radius: 4px;
+}
+
+.menu-item:hover {
+    background-color: #e0e0e0;
+}
+
+#content {
+    flex-grow: 1;
+    padding: 10px;
+    /* (остальные стили для #content (например, для upload, result, player, tracks, recommendations) остаются прежними) */
+} 

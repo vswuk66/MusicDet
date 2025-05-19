@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Genre Classifier</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <!-- Custom classification UI wrapper removed; integrated into theme sections -->
+
+    <aside class="sidebar">
+        <div class="sidebar-content">
+            <div class="search">
+                <input type="text" id="searchInput" placeholder="Search..." />
+            </div>
+            <div class="nav-brand">🎵 <span data-i18n="site_title">Music Genre Classifier</span></div>
+            <button class="burger" id="burgerBtn" aria-label="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <nav>
+                <ul class="nav-links" id="navLinks">
+                    <li><a href="#main" class="nav-link active" data-i18n="nav_home">Home</a></li>
+                    <li><a href="#about" class="nav-link" data-i18n="nav_about">About</a></li>
+                    <li><a href="#contact" class="nav-link" data-i18n="nav_contact">Contact</a></li>
+                    <li><a href="#likes" class="nav-link" data-i18n="nav_likes">Likes</a></li>
+                    <li><a href="#recommendations" class="nav-link" data-i18n="nav_recommendations">Recommendations</a></li>
+                    <li><button class="lang-toggle" id="langToggle" title="Switch language"><span id="langLabel">EN</span></button></li>
+                </ul>
+            </nav>
+        </div>
+    </aside>
+    <main>
+        <section class="hero">
+            <div class="hero-content">
+                <h1 data-i18n="hero_title">AI Music Genre Classifier</h1>
+                <p data-i18n="hero_subtitle">Identify your music genre in seconds. Just upload a file and get the result!</p>
+                <a href="#main" class="cta-btn" data-i18n="hero_try">Try Now</a>
+            </div>
+        </section>
+
+        <section id="main" class="section active">
+            <div class="container">
+                <div id="auth-forms" class="auth-forms">
+                    <div class="auth-container">
+                        <div class="auth-tabs">
+                            <button class="auth-tab active" data-tab="login">Login</button>
+                            <button class="auth-tab" data-tab="register">Register</button>
+                        </div>
+                        
+                        <form id="loginForm" class="auth-form active">
+                            <h2>Login</h2>
+                            <div class="form-group">
+                                <label for="loginUsername">Username</label>
+                                <input type="text" id="loginUsername" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="loginPassword">Password</label>
+                                <input type="password" id="loginPassword" required autocomplete="current-password">
+                            </div>
+                            <button type="submit" class="auth-btn">Login</button>
+                        </form>
+
+                        <form id="registerForm" class="auth-form">
+                            <h2>Register</h2>
+                            <div class="form-group">
+                                <label for="registerUsername">Username</label>
+                                <input type="text" id="registerUsername" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="registerEmail">Email</label>
+                                <input type="email" id="registerEmail" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="registerPassword">Password</label>
+                                <input type="password" id="registerPassword" required autocomplete="new-password">
+                            </div>
+                            <button type="submit" class="auth-btn">Register</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="main-content" class="hidden">
+                    <h1 data-i18n="main_title">Discover Your Music Genre</h1>
+                    <p class="subtitle" data-i18n="main_subtitle">Upload your music file and let our AI classify its genre</p>
+                    
+                    <!-- Modern Slideshow container -->
+                    <div class="modern-slideshow">
+                        <div class="slideshow-wrapper">
+                            <div class="slide fade">
+                                <div class="slide-content">
+                                    <div class="slide-number">01</div>
+                                    <img src="/static/slide1.jpg" alt="Music Genre Classification">
+                                    <div class="slide-caption">
+                                        <h3>Music Genre Classification</h3>
+                                        <p>Discover the genre of your favorite music with our advanced AI</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="slide fade">
+                                <div class="slide-content">
+                                    <div class="slide-number">02</div>
+                                    <img src="/static/slide2.jpg" alt="AI-Powered Analysis">
+                                    <div class="slide-caption">
+                                        <h3>AI-Powered Analysis</h3>
+                                        <p>Our sophisticated algorithms analyze your music in seconds</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="slide fade">
+                                <div class="slide-content">
+                                    <div class="slide-number">03</div>
+                                    <img src="/static/slide3.jpg" alt="Instant Results">
+                                    <div class="slide-caption">
+                                        <h3>Instant Results</h3>
+                                        <p>Get accurate genre predictions with detailed confidence scores</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Navigation -->
+                            <button class="slide-nav prev" onclick="plusSlides(-1)">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button class="slide-nav next" onclick="plusSlides(1)">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+
+                        <!-- Progress bar -->
+                        <div class="slide-progress">
+                            <div class="progress-bar"></div>
+                        </div>
+
+                        <!-- Slide indicators -->
+                        <div class="slide-indicators">
+                            <button class="indicator active" onclick="currentSlide(1)">
+                                <span class="indicator-number">01</span>
+                                <span class="indicator-title">Classification</span>
+                            </button>
+                            <button class="indicator" onclick="currentSlide(2)">
+                                <span class="indicator-number">02</span>
+                                <span class="indicator-title">Analysis</span>
+                            </button>
+                            <button class="indicator" onclick="currentSlide(3)">
+                                <span class="indicator-number">03</span>
+                                <span class="indicator-title">Results</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="upload-container">
+                        <form id="uploadForm" class="upload-form">
+                            <div class="drop-zone" id="dropZone">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p data-i18n="drop_text">Drag & Drop your audio file here</p>
+                                <p class="or" data-i18n="drop_or">or</p>
+                                <label for="fileInput" class="upload-btn" data-i18n="drop_choose">Choose File</label>
+                                <input type="file" id="fileInput" name="file" accept=".wav, .mp3" required>
+                            </div>
+                            <div class="file-info" id="fileInfo"></div>
+                            <button type="submit" class="predict-btn" disabled data-i18n="predict_btn">Predict Genre</button>
+                        </form>
+                    </div>
+
+                    <div class="result-container">
+                        <div id="loader" class="loader hidden">
+                            <div class="spinner"></div>
+                            <p data-i18n="loader_text">Analyzing your music...</p>
+                        </div>
+
+                        <div id="result" class="result hidden">
+                            <div class="prediction-card">
+                                <h3 data-i18n="result_title">Prediction Result</h3>
+                                <div class="genre-result"></div>
+                                <div class="confidence-meter"></div>
+                                <div class="predictions-list"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="history-container">
+                        <h3 data-i18n="history_title">Recent Predictions</h3>
+                        <div id="predictionHistory" class="prediction-history"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="section">
+            <div class="container">
+                <h2 data-i18n="about_title">About Our Classifier</h2>
+                <p data-i18n="about_desc">Our AI-powered music genre classifier uses advanced machine learning to analyze your music and determine its genre. We support various music genres including:</p>
+                <div class="genre-grid">
+                    <div class="genre-item">🎵 Blues</div>
+                    <div class="genre-item">🎻 Classical</div>
+                    <div class="genre-item">🤠 Country</div>
+                    <div class="genre-item">💃 Disco</div>
+                    <div class="genre-item">🎤 Hip-hop</div>
+                    <div class="genre-item">🎷 Jazz</div>
+                    <div class="genre-item">🤘 Metal</div>
+                    <div class="genre-item">🎧 Pop</div>
+                    <div class="genre-item">🎸 Reggae</div>
+                    <div class="genre-item">🎸 Rock</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="contact" class="section">
+            <div class="container">
+                <h2 data-i18n="contact_title"></h2>
+                <div class="contact-info">
+                    <p><i class="fas fa-envelope"></i> Email: <a href="mailto:pasaa905@gmail.com">pasaa905@gmail.com</a></p>
+                    <p><i class="fab fa-github"></i> GitHub: <a href="https://github.com/vswuk66" target="_blank">vswuk66</a></p>
+                </div>
+            </div>
+        </section>
+
+        <section id="likes" class="section">
+            <div class="container">
+                <h2 data-i18n="likes_title">Liked Tracks</h2>
+                <div id="likes-list" class="tracks-list"></div>
+            </div>
+        </section>
+
+        <section id="recommendations" class="section">
+            <div class="container">
+                <h2 data-i18n="recommendations_title">Recommendations</h2>
+                <div id="recommendations-list" class="tracks-list"></div>
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="feature-card">
+                <i class="fas fa-bolt"></i>
+                <h3 data-i18n="feature_instant">Instant</h3>
+                <p data-i18n="feature_instant_desc">Get results in a couple of seconds</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-magic"></i>
+                <h3 data-i18n="feature_ai">AI Inside</h3>
+                <p data-i18n="feature_ai_desc">Modern algorithms</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-shield-alt"></i>
+                <h3 data-i18n="feature_safe">Safe</h3>
+                <p data-i18n="feature_safe_desc">Your files are not saved</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Music Genre Classifier. All rights reserved.</p>
+    </footer>
+
+    <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
