@@ -90,7 +90,3 @@ Acknowledgements
 - [PyTorch](https://pytorch.org/)
 - [TensorFlow](https://www.tensorflow.org/)
 - [FastAPI](https://fastapi.tiangolo.com/)
-
----
-
-Let me know if you want to include example requests, more details on the model architecture, or anything else!
