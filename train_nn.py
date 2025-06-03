@@ -121,6 +121,6 @@ for epoch in range(1, epochs + 1):
 torch.save(model.state_dict(), 'model/nn_model.pth')
 print("Training complete. Model saved to model/nn_model.pth")
 
-train_dataset = train_loader.dataset
+# Save genre mapping used during training
 with open('genre_mapping.json', 'w', encoding='utf-8') as f:
-    json.dump(train_dataset.genre_mapping, f, ensure_ascii=False, indent=2) 
+    json.dump(genre_map, f, ensure_ascii=False, indent=2)
