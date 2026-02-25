@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: music-genre-classifier
+    ports:
+      - "${PORT:-8000}:8000"
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - ALGORITHM=${ALGORITHM:-HS256}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./model:/app/model:ro
+      - ./genre_mapping.json:/app/genre_mapping.json:ro
+      - ./temp:/app/temp
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - app-network
+
+  # Optional: Development service with hot reload
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: music-genre-classifier-dev
+    ports:
+      - "${PORT:-8000}:8000"
+    environment:
+      - APP_ENV=development
+      - DEBUG=true
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key}
+      - ALGORITHM=${ALGORITHM:-HS256}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - .:/app
+      - ./model:/app/model
+      - ./temp:/app/temp
+    command: uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+    profiles:
+      - dev
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

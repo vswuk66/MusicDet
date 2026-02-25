@@ -1,92 +1,314 @@
-Music Genre Classification
+# Music Genre Classifier
 
-This project provides a complete pipeline for music genre classification using deep learning. It includes data preprocessing, model training (with both PyTorch), and a FastAPI web API for genre prediction from audio files.
+[![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.68%2B-009688.svg)](https://fastapi.tiangolo.com/)
+[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.16%2B-FF6F00.svg)](https://www.tensorflow.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C.svg)](https://pytorch.org/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Features
+AI-powered music genre classification using deep learning. Upload an audio file and get instant genre predictions with confidence scores.
 
-- **Audio Preprocessing:** Extracts MFCC features from audio tracks, segmenting each track for robust training.
-- **Model Training:** Supports both PyTorch and TensorFlow models for genre classification.
-- **Web API:** FastAPI-based service for uploading audio files and receiving genre predictions.
-- **Authentication:** Basic authentication routes included.
-- **Ready-to-use Models:** Pretrained models and genre mappings included for immediate inference.
+## Features
 
-Project Structure
+- **Audio Preprocessing**: Extracts MFCC features from audio tracks with automatic segmentation
+- **Deep Learning Models**: Supports both TensorFlow (CNN) and PyTorch models
+- **REST API**: FastAPI-based service with OpenAPI documentation
+- **Web Interface**: Modern responsive UI with dark/light theme support
+- **Authentication**: JWT-based user authentication system
+- **Multi-language**: English and Russian interface support
+- **Docker Ready**: Full containerization support for easy deployment
 
-```
-.
-├── app.py                  # FastAPI web server
-├── predict.py              # Pytorch prediction logic
-├── preprocess_data.py      # Audio preprocessing and MFCC extraction
-├── train_nn.py             # PyTorch model training script
-├── model/
-│   ├── genre_classifier_cnn_gtzan.h5   # Keras model
-│   ├── nn_model.py         # PyTorch model definitions
-│   ├── best_model.pth      # PyTorch trained weights
-│   └── scaler.pkl          # Feature scaler for PyTorch model
-├── genre_mapping.json      # Mapping from class indices to genre names
-├── requirements.txt        # Python dependencies
-├── static/, templates/     # Frontend files (if any)
-├── temp/                   # Temporary files (uploads, etc.)
-└── data/                   # Dataset and processed features
-```
+## Supported Genres
 
-Setup
+| Genre | Genre | Genre |
+|-------|-------|-------|
+| Blues | Classical | Country |
+| Disco | Hip-hop | Jazz |
+| Metal | Pop | Reggae |
+| Rock | | |
 
-1. Install Dependencies
+## Quick Start
 
-It is recommended to use a virtual environment.
+### Prerequisites
+
+- Python 3.9 or higher
+- pip or conda package manager
+- (Optional) Docker and Docker Compose
+
+### Installation
+
+#### Option 1: Using pip
 
 ```bash
+# Clone the repository
+git clone https://github.com/vswuk66/music-genre-classifier.git
+cd music-genre-classifier
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Copy environment file and configure
+cp .env.example .env
+# Edit .env with your settings
 ```
 
-2. Run the API Server
+#### Option 2: Using Docker
 
 ```bash
-uvicorn app:app --reload
+# Clone the repository
+git clone https://github.com/vswuk66/music-genre-classifier.git
+cd music-genre-classifier
+
+# Copy environment file
+cp .env.example .env
+
+# Build and run with Docker Compose
+docker-compose up -d
+
+# Or build manually
+docker build -t music-genre-classifier .
+docker run -p 8000:8000 music-genre-classifier
 ```
 
-- The API will be available at `http://localhost:8000`.
+### Running the Application
 
-API Usage
+#### Development Mode
 
-Predict Genre
+```bash
+# Using Python directly
+uvicorn app:app --reload --host 0.0.0.0 --port 8000
 
-- **Endpoint:** `POST /predict`
-- **Description:** Upload an audio file (`.wav`, `.mp3`, etc.) to receive a genre prediction.
-- **Request:** `multipart/form-data` with a file field.
-- **Response:**
-  ```json
-  {
-    "success": true,
-    "prediction": {
-      "genre": "Classical",
-      "confidence": 0.9
-    }
+# Using Make
+make run-dev
+
+# Using Docker Compose (development profile)
+docker-compose --profile dev up app-dev
+```
+
+#### Production Mode
+
+```bash
+# Using Python
+uvicorn app:app --host 0.0.0.0 --port 8000
+
+# Using Make
+make run
+
+# Using Docker Compose
+docker-compose up -d
+```
+
+The API will be available at `http://localhost:8000`
+
+## Project Structure
+
+```
+music-genre-classifier/
+├── app.py                 # FastAPI application entry point
+├── auth.py                # Authentication routes and utilities
+├── config.py              # Configuration constants
+├── predict.py             # TensorFlow model prediction logic
+├── preprocess_data.py     # Audio preprocessing and MFCC extraction
+├── train_nn.py            # PyTorch model training script
+├── utils.py               # Utility functions
+├── model/
+│   ├── nn_model.py        # Neural network model definitions
+│   ├── genre_classifier_cnn_gtzan.h5  # Pre-trained Keras model
+│   ├── nn_model.pth       # PyTorch model weights
+│   └── scaler.pkl         # Feature scaler
+├── static/
+│   ├── index.html         # Web interface
+│   ├── script.js          # Frontend JavaScript
+│   └── styles.css         # Styles
+├── genre_mapping.json     # Genre label mappings
+├── requirements.txt       # Python dependencies
+├── pyproject.toml         # Project metadata and build config
+├── Dockerfile             # Docker build instructions
+├── docker-compose.yml     # Docker Compose configuration
+├── Makefile               # Convenience commands
+└── .env.example           # Environment variables template
+```
+
+## API Documentation
+
+### Endpoints
+
+#### Predict Genre
+
+```http
+POST /predict
+Content-Type: multipart/form-data
+```
+
+Upload an audio file to receive genre prediction.
+
+**Request:**
+- `file`: Audio file (supported formats: `.wav`, `.mp3`, `.ogg`, `.flac`, `.aac`, `.m4a`)
+
+**Response:**
+```json
+{
+  "success": true,
+  "prediction": {
+    "genre": "Classical",
+    "confidence": 0.92
   }
-  ```
+}
+```
 
-Health Check
+#### Health Check
 
-- **Endpoint:** `GET /health`
-- **Description:** Check if the model is loaded and the API is healthy.
+```http
+GET /health
+```
 
-Model Details
+Check API and model status.
 
-- **Input:** Audio files (preferably 29-30 seconds, mono, 22050 Hz).
-- **Features:** MFCCs extracted per segment.
-- **Classes:** 10 genres (see `genre_mapping.json`).
+**Response:**
+```json
+{
+  "status": "healthy",
+  "tensorflow_model_status": "TensorFlow model loaded.",
+  "tensorflow_model_loaded_bool": true
+}
+```
 
-Notes
+#### Authentication
 
-- Place audio files for quick testing in the `temp/` directory.
-- The API supports CORS for easy frontend integration.
-- For authentication and user management, see `auth.py`.
+```http
+POST /token
+Content-Type: application/x-www-form-urlencoded
 
-Acknowledgements
+username=testuser&password=testpass
+```
 
-- [GTZAN dataset](http://marsyas.info/downloads/datasets.html)
-- [Librosa](https://librosa.org/)
-- [PyTorch](https://pytorch.org/)
-- [TensorFlow](https://www.tensorflow.org/)
-- [FastAPI](https://fastapi.tiangolo.com/)
+**Response:**
+```json
+{
+  "access_token": "eyJ...",
+  "token_type": "bearer"
+}
+```
+
+#### Register User
+
+```http
+POST /register
+Content-Type: application/json
+
+{
+  "username": "newuser",
+  "email": "user@example.com",
+  "password": "securepassword"
+}
+```
+
+### Interactive Documentation
+
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+
+## Configuration
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `SECRET_KEY` | JWT signing key | `your-secret-key-here` |
+| `ALGORITHM` | JWT algorithm | `HS256` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Token expiration | `30` |
+| `MODEL_PATH` | Path to model file | `model/genre_classifier_cnn_gtzan.h5` |
+| `LOG_LEVEL` | Logging level | `INFO` |
+
+## Model Details
+
+### Input Requirements
+
+- **Audio Format**: WAV, MP3, OGG, FLAC, AAC, M4A
+- **Duration**: Ideally 29-30 seconds (shorter files are padded)
+- **Sample Rate**: 22050 Hz (automatically resampled)
+- **Channels**: Mono (stereo is converted automatically)
+
+### Architecture
+
+The TensorFlow model uses a CNN architecture trained on the GTZAN dataset:
+- Input: MFCC features extracted from audio segments
+- Output: Probability distribution over 10 genres
+- Prediction: Majority voting across segments
+
+## Development
+
+### Setup Development Environment
+
+```bash
+# Install with development dependencies
+pip install -e ".[dev]"
+
+# Install pre-commit hooks
+pre-commit install
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+make test
+
+# Run with coverage
+make test-cov
+```
+
+### Code Formatting
+
+```bash
+# Format code
+make format
+
+# Check linting
+make lint
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Model not loading**
+   - Ensure model file exists at `model/genre_classifier_cnn_gtzan.h5`
+   - Check file permissions
+
+2. **Audio processing errors**
+   - Install FFmpeg: `apt-get install ffmpeg` or `brew install ffmpeg`
+   - Ensure audio file is not corrupted
+
+3. **Memory issues**
+   - Reduce `NUM_SEGMENTS` in config
+   - Use smaller audio files
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgements
+
+- [GTZAN Dataset](http://marsyas.info/downloads/datasets.html) - Music genre dataset
+- [Librosa](https://librosa.org/) - Audio analysis library
+- [TensorFlow](https://www.tensorflow.org/) - Deep learning framework
+- [PyTorch](https://pytorch.org/) - Machine learning library
+- [FastAPI](https://fastapi.tiangolo.com/) - Modern web framework
+
+## Contact
+
+- **Email**: pasaa905@gmail.com
+- **GitHub**: [@vswuk66](https://github.com/vswuk66)
