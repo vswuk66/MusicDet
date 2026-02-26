@@ -1,0 +1,191 @@
+# =============================================================================
+# CI Pipeline - Continuous Integration
+# =============================================================================
+# Этот workflow запускается при каждом push и pull request.
+# Он проверяет качество кода: запускает тесты, линтеры и проверку типов.
+#
+# Как это работает:
+# 1. Checkout - скачивает код из репозитория
+# 2. Setup Python - устанавливает нужную версию Python
+# 3. Cache - кэширует зависимости для ускорения следующих запусков
+# 4. Install - устанавливает зависимости проекта
+# 5. Lint - проверяет код на соответствие стандартам (flake8)
+# 6. Type Check - проверяет типы (mypy) 
+# 7. Test - запускает тесты (pytest)
+# =============================================================================
+
+name: CI
+
+# Когда запускать workflow
+on:
+  push:
+    branches: [ main, master, develop ]  # При push в эти ветки
+  pull_request:
+    branches: [ main, master, develop ]  # При PR в эти ветки
+
+# Переменные окружения для всех jobs
+env:
+  PYTHON_VERSION: "3.11"
+  
+jobs:
+  # ===========================================================================
+  # Job 1: Линтинг и проверка стиля кода
+  # ===========================================================================
+  lint:
+    name: Lint & Code Style
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Шаг 1: Скачать код из репозитория
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # Шаг 2: Установить Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      # Шаг 3: Кэширование pip зависимостей
+      # Это ускоряет сборку - не нужно каждый раз скачивать пакеты
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-lint-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-lint-
+            ${{ runner.os }}-pip-
+      
+      # Шаг 4: Установить инструменты линтинга
+      - name: Install linting tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 black isort mypy
+      
+      # Шаг 5: Проверка с flake8 (ошибки синтаксиса и стиля)
+      - name: Run flake8
+        run: |
+          # Проверка на критические ошибки (остановится при ошибке)
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # Проверка стиля (не остановится, только покажет предупреждения)
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=100 --statistics
+      
+      # Шаг 6: Проверка форматирования с black (только проверка, без изменений)
+      - name: Check formatting with black
+        run: black --check --diff . || true
+      
+      # Шаг 7: Проверка сортировки импортов с isort
+      - name: Check import sorting with isort
+        run: isort --check-only --diff . || true
+
+  # ===========================================================================
+  # Job 2: Тестирование
+  # ===========================================================================
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    needs: lint  # Запускать только после успешного линтинга
+    
+    # Матрица - запустить тесты на разных версиях Python
+    strategy:
+      fail-fast: false  # Продолжить тесты других версий даже если одна упала
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      # Кэширование зависимостей
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ matrix.python-version }}-
+            ${{ runner.os }}-pip-
+      
+      # Установка системных зависимостей для аудио-обработки
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsndfile1 ffmpeg
+      
+      # Установка Python зависимостей
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-asyncio httpx
+      
+      # Запуск тестов с покрытием
+      - name: Run tests with coverage
+        run: |
+          pytest tests/ -v --cov=. --cov-report=xml --cov-report=term-missing
+        env:
+          SECRET_KEY: "test-secret-key-for-ci"
+      
+      # Загрузка отчёта о покрытии (опционально, для Codecov)
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: matrix.python-version == '3.11'  # Загружать только для одной версии
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
+        continue-on-error: true
+
+  # ===========================================================================
+  # Job 3: Проверка сборки Docker образа
+  # ===========================================================================
+  docker-build-test:
+    name: Docker Build Test
+    runs-on: ubuntu-latest
+    needs: lint
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # Настройка Docker Buildx (расширенные возможности сборки)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      # Пробная сборка образа (без push)
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false  # Не пушить, только собрать
+          tags: music-genre-classifier:test
+          cache-from: type=gha  # Использовать GitHub Actions кэш
+          cache-to: type=gha,mode=max
+
+  # ===========================================================================
+  # Job 4: Проверка безопасности зависимостей
+  # ===========================================================================
+  security:
+    name: Security Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      # Проверка на известные уязвимости в зависимостях
+      - name: Check for vulnerabilities with pip-audit
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt || true
+        continue-on-error: true  # Не падать при найденных уязвимостях

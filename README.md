@@ -1,10 +1,13 @@
 # Music Genre Classifier
 
+[![CI](https://github.com/vswuk66/MusicDet/actions/workflows/ci.yml/badge.svg)](https://github.com/vswuk66/MusicDet/actions/workflows/ci.yml)
+[![CD](https://github.com/vswuk66/MusicDet/actions/workflows/cd.yml/badge.svg)](https://github.com/vswuk66/MusicDet/actions/workflows/cd.yml)
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.68%2B-009688.svg)](https://fastapi.tiangolo.com/)
 [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.16%2B-FF6F00.svg)](https://www.tensorflow.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C.svg)](https://pytorch.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://github.com/vswuk66/MusicDet/pkgs/container/musicdet)
 
 AI-powered music genre classification using deep learning. Upload an audio file and get instant genre predictions with confidence scores.
 
@@ -271,6 +274,57 @@ make format
 # Check linting
 make lint
 ```
+
+## CI/CD
+
+This project uses GitHub Actions for continuous integration and deployment.
+
+### Pipelines
+
+| Workflow | Trigger | Description |
+|----------|---------|-------------|
+| **CI** | Push, PR | Runs linting, tests, security checks |
+| **CD** | Push to main, tags | Builds and pushes Docker image |
+| **Release** | Version tags | Creates GitHub release with changelog |
+
+### Running CI Locally
+
+```bash
+# Run linting
+make lint
+
+# Run tests
+make test
+
+# Build Docker image
+make docker-build
+```
+
+### Creating a Release
+
+```bash
+# 1. Update version in pyproject.toml
+# 2. Commit changes
+git add . && git commit -m "Release v1.2.0"
+
+# 3. Create and push tag
+git tag v1.2.0
+git push origin v1.2.0
+```
+
+### Docker Images
+
+Images are automatically published to GitHub Container Registry:
+
+```bash
+# Pull latest
+docker pull ghcr.io/vswuk66/musicdet:latest
+
+# Pull specific version
+docker pull ghcr.io/vswuk66/musicdet:1.2.0
+```
+
+For detailed CI/CD documentation, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Troubleshooting
 
