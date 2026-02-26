@@ -78,6 +78,26 @@ class TestPredictEndpoint:
         )
         assert response.status_code == 400
 
+    def test_predict_replaces_rap_with_custom_text(self, client, monkeypatch):
+        """Test that rap-like labels are replaced in API response."""
+        import app as app_module
+
+        monkeypatch.setattr(app_module, "tf_loaded_model", object())
+        monkeypatch.setattr(
+            app_module,
+            "tf_predict_genre_from_audio_file",
+            lambda _path: ("hiphop", 0.87),
+        )
+
+        response = client.post(
+            "/predict",
+            files={"file": ("test.wav", b"fake audio payload", "audio/wav")}
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["prediction"]["genre"] == "не реп а говно"
+        assert data["prediction"]["confidence"] == 0.87
+
 
 class TestStaticFiles:
     """Tests for static file serving."""

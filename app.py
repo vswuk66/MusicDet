@@ -38,6 +38,21 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__) # Get logger after basicConfig
 
+CUSTOM_RAP_RESPONSE = "не реп а говно"
+RAP_GENRE_ALIASES = {"rap", "hiphop", "hip-hop", "hip hop", "рэп", "реп"}
+
+
+def apply_custom_genre_label(genre):
+    """Replace rap/hiphop labels with a custom response string."""
+    if not isinstance(genre, str):
+        return genre
+
+    normalized_genre = genre.strip().lower()
+    if normalized_genre in RAP_GENRE_ALIASES:
+        return CUSTOM_RAP_RESPONSE
+
+    return genre
+
 app = FastAPI(
     title="Music Genre Classification API",
     description="API for classifying music genres using a TensorFlow CNN model (GTZAN based)",
@@ -92,10 +107,14 @@ async def predict_genre_tf_endpoint(file: UploadFile = File(...)): # Renamed fun
              logger.error(f"Prediction failed for {temp_file_path} (reported by predict.py): {genre}")
              raise HTTPException(status_code=500, detail=genre)
 
+        final_genre = apply_custom_genre_label(genre)
+        if final_genre != genre:
+            logger.info("Genre label was replaced by custom mapping.")
+
         response_data = {
             "success": True,
             "prediction": {
-                "genre": genre,
+                "genre": final_genre,
                 "confidence": confidence
             }
         }
