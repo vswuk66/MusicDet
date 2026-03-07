@@ -11,6 +11,7 @@ class TestHealthEndpoint:
         data = response.json()
         assert "status" in data
         assert data["status"] == "healthy"
+        assert "vector_db" in data
 
 
 class TestAuthEndpoints:
@@ -86,3 +87,46 @@ class TestStaticFiles:
         """Test that index page is served."""
         response = client.get("/")
         assert response.status_code == 200
+
+
+class TestEmbeddingEndpoints:
+    """Tests for pgvector embedding endpoints."""
+
+    def test_embedding_status_endpoint(self, client):
+        response = client.get("/embeddings/status")
+        assert response.status_code == 200
+        data = response.json()
+        assert "enabled" in data
+        assert "ready" in data
+        assert "embedding_dim" in data
+
+    def test_add_embedding_returns_503_when_vector_db_disabled(self, client):
+        import app as app_module
+
+        if app_module.vector_store_service.status()["enabled"]:
+            pytest.skip("Vector DB is enabled in this environment.")
+
+        dim = app_module.vector_store_service.embedding_dim
+        response = client.post(
+            "/embeddings",
+            json={
+                "track_name": "sample.wav",
+                "genre": "classical",
+                "embedding": [0.0] * dim,
+                "metadata": {"test": True},
+            },
+        )
+        assert response.status_code == 503
+
+    def test_search_embeddings_returns_503_when_vector_db_disabled(self, client):
+        import app as app_module
+
+        if app_module.vector_store_service.status()["enabled"]:
+            pytest.skip("Vector DB is enabled in this environment.")
+
+        dim = app_module.vector_store_service.embedding_dim
+        response = client.post(
+            "/embeddings/search",
+            json={"embedding": [0.0] * dim, "top_k": 3},
+        )
+        assert response.status_code == 503

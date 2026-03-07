@@ -18,6 +18,7 @@ AI-powered music genre classification using deep learning. Upload an audio file 
 - **REST API**: FastAPI-based service with OpenAPI documentation
 - **Web Interface**: Modern responsive UI with dark/light theme support
 - **Authentication**: JWT-based user authentication system
+- **Vector Search**: PostgreSQL + pgvector storage and similarity search for embeddings
 - **Multi-language**: English and Russian interface support
 - **Docker Ready**: Full containerization support for easy deployment
 
@@ -69,7 +70,7 @@ cd music-genre-classifier
 # Copy environment file
 cp .env.example .env
 
-# Build and run with Docker Compose
+# Build and run with Docker Compose (app + PostgreSQL/pgvector)
 docker-compose up -d
 
 # Or build manually
@@ -132,6 +133,7 @@ music-genre-classifier/
 ├── pyproject.toml         # Project metadata and build config
 ├── Dockerfile             # Docker build instructions
 ├── docker-compose.yml     # Docker Compose configuration
+├── vector_store.py        # PostgreSQL + pgvector integration
 ├── Makefile               # Convenience commands
 └── .env.example           # Environment variables template
 ```
@@ -180,6 +182,44 @@ Check API and model status.
 }
 ```
 
+#### Vector DB Status
+
+```http
+GET /embeddings/status
+```
+
+Shows whether pgvector storage is enabled and ready.
+
+#### Save Embedding
+
+```http
+POST /embeddings
+Content-Type: application/json
+
+{
+  "track_name": "beethoven_01.wav",
+  "genre": "classical",
+  "embedding": [0.12, -0.06, ...],
+  "metadata": {"source": "manual-test"}
+}
+```
+
+Stores one embedding vector in PostgreSQL.
+
+#### Search Similar Embeddings
+
+```http
+POST /embeddings/search
+Content-Type: application/json
+
+{
+  "embedding": [0.11, -0.05, ...],
+  "top_k": 5
+}
+```
+
+Returns the nearest vectors by cosine distance.
+
 #### Authentication
 
 ```http
@@ -226,6 +266,9 @@ Content-Type: application/json
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Token expiration | `30` |
 | `MODEL_PATH` | Path to model file | `model/genre_classifier_cnn_gtzan.h5` |
 | `LOG_LEVEL` | Logging level | `INFO` |
+| `ENABLE_VECTOR_DB` | Enable PostgreSQL + pgvector integration | `false` |
+| `DATABASE_URL` | SQLAlchemy DSN for PostgreSQL | `postgresql+psycopg://postgres:postgres@localhost:5432/musicdet` |
+| `EMBEDDING_DIM` | Vector length for pgvector column | `128` |
 
 ## Model Details
 
