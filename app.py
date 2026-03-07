@@ -6,9 +6,12 @@ import os
 import logging
 import tempfile
 import shutil
+from typing import Any, Dict, List, Optional
 from auth import setup_auth_routes
 import traceback
 from pathlib import Path
+from pydantic import BaseModel, Field
+from vector_store import vector_store_service
 
 # Import prediction logic from predict.py
 try:
@@ -43,6 +46,24 @@ app = FastAPI(
     description="API for classifying music genres using a TensorFlow CNN model (GTZAN based)",
     version="1.2.0" # Version updated
 )
+
+
+class EmbeddingUpsertRequest(BaseModel):
+    track_name: str = Field(..., min_length=1, max_length=255)
+    embedding: List[float]
+    genre: Optional[str] = Field(default=None, max_length=64)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class EmbeddingSearchRequest(BaseModel):
+    embedding: List[float]
+    top_k: int = Field(default=5, ge=1, le=50)
+    genre: Optional[str] = Field(default=None, max_length=64)
+
+
+@app.on_event("startup")
+async def startup_event():
+    vector_store_service.initialize()
 
 # Add CORS middleware
 app.add_middleware(
@@ -122,7 +143,54 @@ async def health_check():
     tf_model_ready = tf_loaded_model is not None
     status_message = "TensorFlow model loaded." if tf_model_ready else "TensorFlow model NOT loaded."
     logger.info(f"Health check: {status_message}")
-    return {"status": "healthy", "tensorflow_model_status": status_message, "tensorflow_model_loaded_bool": tf_model_ready}
+    return {
+        "status": "healthy",
+        "tensorflow_model_status": status_message,
+        "tensorflow_model_loaded_bool": tf_model_ready,
+        "vector_db": vector_store_service.status(),
+    }
+
+
+@app.get("/embeddings/status")
+async def get_embeddings_status():
+    return vector_store_service.status()
+
+
+@app.post("/embeddings")
+async def add_embedding(payload: EmbeddingUpsertRequest):
+    try:
+        record = vector_store_service.add_embedding(
+            track_name=payload.track_name,
+            embedding=payload.embedding,
+            genre=payload.genre,
+            metadata=payload.metadata,
+        )
+        return {"success": True, "embedding": record}
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.error("Unexpected error in /embeddings: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail="Unexpected vector DB error") from exc
+
+
+@app.post("/embeddings/search")
+async def search_embeddings(payload: EmbeddingSearchRequest):
+    try:
+        results = vector_store_service.search_similar(
+            query_embedding=payload.embedding,
+            top_k=payload.top_k,
+            genre=payload.genre,
+        )
+        return {"success": True, "results": results, "count": len(results)}
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.error("Unexpected error in /embeddings/search: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail="Unexpected vector DB error") from exc
 
 # Mount static files folder
 app.mount("/static", StaticFiles(directory="static"), name="static")
